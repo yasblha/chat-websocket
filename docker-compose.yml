@@ -1,10 +1,10 @@
 version: '3.9'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
+  postgres-nest:
+    image: postgres:16
     restart: always
+    container_name: postgres-nest
     ports:
       - "5432:5432"
     environment:
@@ -15,12 +15,30 @@ services:
       - shared_pgdata:/var/lib/postgresql/data
 
   nest:
-    image: nestjs/cli
-    build: ./app
+    build:
+      context: ./server/
+      dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
-      -
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      - postgres-nest
 
-  front:
+  angular-app:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: angular-app
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./front:/angular-app
+    environment:
+      - STYLE=scss
+
+volumes:
+  shared_pgdata:
