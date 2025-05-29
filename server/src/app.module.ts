@@ -7,12 +7,18 @@ import { MessageController } from './message/message.controller';
 import { MessageModule } from './message/message.module';
 import { Message } from "./message/message.entity";
 import { User} from "./user/user.entity";
+import { MessageGateway } from './message-gateway/message-gateway.gateway';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { AuthModule } from './auth/auth.module';
+import {AppController} from "./app.controller";
+import {AppService} from "./app.service";
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'postgres-nest',
+      host: 'localhost',
       port: 5432,
       username: 'postgres',
       password: 'postgres',
@@ -23,8 +29,9 @@ import { User} from "./user/user.entity";
     }),
     UserModule,
     MessageModule,
+    AuthModule,
   ],
-  providers: [Database],
-  controllers: [UserController, MessageController],
+  providers: [Database, MessageGateway, AuthService, AppService],
+  controllers: [UserController, MessageController, AuthController, AppController],
 })
 export class AppModule {}

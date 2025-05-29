@@ -10,17 +10,27 @@ export class MessageService {
         private readonly messageRepository: Repository<Message>,
     ) {}
 
-    findMessageBySenderId(senderId: number) {
-        return this.messageRepository.findBy({ senderId });
+    async findMessageBySenderId(senderId: number): Promise<Message[]> {
+        return this.messageRepository.find({
+            where: { senderId },
+            order: { timestamp: 'DESC' }
+        });
     }
 
-    Create(message: Message) {
+    async create(message: Partial<Message>): Promise<Message> {
+        const newMessage = this.messageRepository.create(message);
+        return this.messageRepository.save(newMessage);
+    }
+
+    update(message: Message) {
         return this.messageRepository.save(message);
     }
 
-    Update(message: Message) {
-        return this.messageRepository.save(message);
+    async delete(id: number): Promise<void> {
+        await this.messageRepository.delete(id);
     }
 
-
+    async markAsRead(messageId: number): Promise<void> {
+        await this.messageRepository.update(messageId, { isRead: true });
+    }
 }

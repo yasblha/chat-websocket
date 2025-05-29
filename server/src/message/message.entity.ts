@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class Message {
@@ -6,21 +6,17 @@ export class Message {
     id: number;
 
     @Column()
-    message: string;
-
-    @Column()
-    createdAt: Date;
-
-    @Column()
-    updatedAt: Date;
-
-    @Column()
-    deletedAt: Date;
-
-    @Column()
     senderId: number;
 
     @Column()
     receiverId: number;
 
+    @Column('text')
+    content: string;
+
+    @CreateDateColumn()
+    timestamp: Date;
+
+    @Column({ default: false })
+    isRead: boolean;
 }
