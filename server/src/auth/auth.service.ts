@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 
+type UserWithoutPassword = Omit<User, 'password'>;
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -19,14 +21,16 @@ export class AuthService {
         return null;
     }
 
-    async login(user: User): Promise<{ accessToken: string }> {
+    async login(user: User): Promise<{ access_token: string; user: UserWithoutPassword }> {
         const payload = { username: user.username, sub: user.id };
+        const { password, ...userWithoutPassword } = user;
         return {
-            accessToken: this.jwtService.sign(payload),
+            access_token: this.jwtService.sign(payload),
+            user: userWithoutPassword
         };
     }
 
-    async register(user: Partial<User>): Promise<User> {
+    async register(user: Partial<User>): Promise<{ access_token: string; user: UserWithoutPassword }> {
         const hashedPassword = await bcrypt.hash(user.password, 10);
         const newUser: User = {
             name: user.name!,
@@ -36,6 +40,13 @@ export class AuthService {
             status: user.status!,
         };
 
-        return this.userService.create(newUser);
+        const createdUser = await this.userService.create(newUser);
+        const { password, ...userWithoutPassword } = createdUser;
+        const payload = { username: createdUser.username, sub: createdUser.id };
+
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: userWithoutPassword
+        };
     }
 }

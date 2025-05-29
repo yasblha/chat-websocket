@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import * as process from "node:process";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
 
   const config = new DocumentBuilder()
       .setTitle('chat app')
@@ -15,10 +15,9 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  const port = process.env.PORT || 0
-
-  await app.listen(process.env.PORT ?? port);
-  console.log(`Application running on port ${await app.getUrl()}`);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application running on port ${port}`);
 }
+
 bootstrap();
-console.log(bootstrap());

@@ -13,6 +13,8 @@ import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import {AppController} from "./app.controller";
 import {AppService} from "./app.service";
+import { ConversationModule } from './conversation/conversation.module';
+import { Conversation } from './conversation/conversation.entity';
 
 @Module({
   imports: [
@@ -23,13 +25,14 @@ import {AppService} from "./app.service";
       username: 'postgres',
       password: 'postgres',
       database: 'main',
-      entities: [User, Message],
+      entities: [User, Message, Conversation],
       synchronize: true,
       autoLoadEntities: true,
     }),
     UserModule,
     MessageModule,
     AuthModule,
+    ConversationModule,
   ],
   providers: [Database, MessageGateway, AuthService, AppService],
   controllers: [UserController, MessageController, AuthController, AppController],

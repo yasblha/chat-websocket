@@ -1,39 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { User} from "./user.entity";
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from "./user.entity";
 
 @Injectable()
 export class UserService {
-    private readonly users: User[] = [];
+    constructor(
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>
+    ) {}
 
-    create(user: User) {
-        this.users.push(user);
-        return user;
+    async create(user: User): Promise<User> {
+        return this.userRepository.save(user);
     }
 
-    findById(id: number): User {
-        return this.users.find(user => user.id === id);
+    async findById(id: number): Promise<User> {
+        return this.userRepository.findOne({ where: { id } });
     }
 
-    findAll(): User[] {
-        return this.users;
+    async findAll(): Promise<User[]> {
+        return this.userRepository.find();
     }
 
-    delete(id: number): void {
-        const index = this.users.findIndex(user => user.id === id);
-        if (index !== -1) {
-            this.users.splice(index, 1);
-        }
+    async delete(id: number): Promise<void> {
+        await this.userRepository.delete(id);
     }
 
-    update(id: number, updatedUser: Partial<User>): User {
-        const user = this.users.find(user => user.id === id);
-        if (user) {
-            Object.assign(user, updatedUser);
-        }
-        return user;
+    async update(id: number, updatedUser: Partial<User>): Promise<User> {
+        await this.userRepository.update(id, updatedUser);
+        return this.findById(id);
     }
 
-    findByEmail(email: string): User {
-        return this.users.find(user => user.email === email);
+    async findByEmail(email: string): Promise<User> {
+        return this.userRepository.findOne({ where: { email } });
     }
 }
