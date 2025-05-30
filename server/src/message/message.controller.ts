@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, UseGuards, Query } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { Message } from './message.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -88,5 +88,24 @@ export class MessageController {
     async deleteMessage(@Param('id') id: number): Promise<{ message: string }> {
         await this.messageService.delete(id);
         return { message: 'Message deleted successfully' };
+    }
+
+    @Get('/search/:conversationId')
+    @ApiOperation({ summary: 'Rechercher des messages dans une conversation' })
+    @ApiParam({ 
+        name: 'conversationId', 
+        description: 'ID de la conversation',
+        example: 1
+    })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Liste des messages correspondants', 
+        type: [Message]
+    })
+    async searchMessages(
+        @Param('conversationId') conversationId: number,
+        @Query('query') query: string
+    ): Promise<Message[]> {
+        return this.messageService.searchMessages(conversationId, query);
     }
 }

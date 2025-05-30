@@ -36,17 +36,23 @@ export class MessageService {
 
         const newMessage = this.messageRepository.create({
             ...message,
-            conversationId: conversation.id
+            conversationId: conversation.id,
+            timestamp: new Date()
         });
         return this.messageRepository.save(newMessage);
     }
 
     async getConversationMessages(conversationId: number): Promise<Message[]> {
-        return this.messageRepository.find({
+        console.log('Chargement des messages de la conversation:', conversationId);
+        
+        const messages = await this.messageRepository.find({
             where: { conversationId },
             relations: ['sender', 'receiver'],
             order: { timestamp: 'ASC' }
         });
+
+        console.log('Messages chargés:', messages.length);
+        return messages;
     }
 
     async update(message: Message) {
@@ -73,5 +79,28 @@ export class MessageService {
             skip: skip,
             take: limit,
         });
+    }
+
+    async searchMessages(conversationId: number, query: string): Promise<Message[]> {
+        if (!query || !conversationId) {
+            console.log('Paramètres de recherche invalides:', { conversationId, query });
+            return [];
+        }
+
+        console.log('Recherche de messages:', { 
+            conversationId: Number(conversationId), 
+            query 
+        });
+        
+        const messages = await this.messageRepository.createQueryBuilder('message')
+            .leftJoinAndSelect('message.sender', 'sender')
+            .leftJoinAndSelect('message.receiver', 'receiver')
+            .where('message."conversationId" = :conversationId', { conversationId: Number(conversationId) })
+            .andWhere('message."content" ILIKE :searchText', { searchText: `%${query}%` })
+            .orderBy('message."timestamp"', 'ASC')
+            .getMany();
+
+        console.log('Résultats trouvés:', messages.length);
+        return messages;
     }
 }

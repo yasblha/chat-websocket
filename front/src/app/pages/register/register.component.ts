@@ -18,41 +18,41 @@ import { FormFieldComponent } from '../../components/form-field/form-field.compo
             <app-form-field
               [control]="nameControl"
               label="Nom"
-              type="text"
-              placeholder="Entrez votre nom"
+                type="text"
+                placeholder="Entrez votre nom"
             ></app-form-field>
 
             <app-form-field
               [control]="usernameControl"
               label="Nom d'utilisateur"
-              type="text"
-              placeholder="Choisissez un nom d'utilisateur"
+                type="text"
+                placeholder="Choisissez un nom d'utilisateur"
             ></app-form-field>
 
             <app-form-field
               [control]="emailControl"
               label="Email"
-              type="email"
-              placeholder="Entrez votre email"
+                type="email"
+                placeholder="Entrez votre email"
             ></app-form-field>
 
             <app-form-field
               [control]="passwordControl"
               label="Mot de passe"
-              type="password"
-              placeholder="Entrez votre mot de passe"
+                type="password"
+                placeholder="Entrez votre mot de passe"
             ></app-form-field>
 
             <app-form-field
               [control]="confirmPasswordControl"
               label="Confirmer le mot de passe"
-              type="password"
-              placeholder="Confirmez votre mot de passe"
+                type="password"
+                placeholder="Confirmez votre mot de passe"
             ></app-form-field>
             
             <!-- Gestion de l'erreur de correspondance de mot de passe -->
-            <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="error">
-              Les mots de passe ne correspondent pas
+              <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="error">
+                Les mots de passe ne correspondent pas
             </div>
           </div>
 

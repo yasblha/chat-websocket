@@ -75,4 +75,10 @@ export class ConversationService {
       headers: this.getHeaders()
     });
   }
+
+  searchConversationMessages(conversationId: number, query: string): Observable<Message[]> {
+    return this.http.get<Message[]>(`${environment.apiUrl}/message/search/${conversationId}?query=${query}`, {
+      headers: this.getHeaders()
+    });
+  }
 } 

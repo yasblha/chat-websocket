@@ -14,7 +14,7 @@ import {
     Conversation,
     Message
   } from '../../services/conversation.service';
-  import { io, Socket } from 'socket.io-client';
+  import { io, Socket as SocketIOClient } from 'socket.io-client';
   import { environment } from '../../../environments/environment';
   import { FormsModule } from '@angular/forms';
   import { UserColorModalComponent } from '../../components/user-color-modal/user-color-modal.component';
@@ -80,20 +80,48 @@ import {
               <div *ngIf="selectedConversation" class="h-[600px] flex flex-col">
                 <!-- En-tête -->
                 <div class="p-4 border-b">
-                  <h3 class="font-semibold">
-                    {{ selectedConversation.user1.id === currentUser?.id ? selectedConversation.user2.name : selectedConversation.user1.name }}
-                  </h3>
+                  <div class="flex justify-between items-center">
+                    <h3 class="font-semibold">
+                      {{ selectedConversation.user1.id === currentUser?.id ? selectedConversation.user2.name : selectedConversation.user1.name }}
+                    </h3>
+                    <div *ngIf="searchResults" class="text-sm text-gray-500">
+                      {{ searchResults.length }} résultat(s) trouvé(s)
+                    </div>
+                  </div>
+                  <!-- Barre de recherche -->
+                  <div class="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      [(ngModel)]="searchQuery"
+                      (input)="onSearch()"
+                      placeholder="Rechercher dans les messages..."
+                      class="flex-1 p-2 border rounded"
+                    >
+                    <button 
+                      *ngIf="searchQuery"
+                      (click)="clearSearch()"
+                      class="px-3 py-2 text-gray-500 hover:text-gray-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
   
                 <!-- Messages -->
                 <div class="flex-1 overflow-y-auto p-4 space-y-4" #messageContainer>
-                  <div *ngFor="let message of selectedConversation.messages" 
+                  <div *ngIf="searchResults && searchResults.length === 0" class="text-center text-gray-500 py-4">
+                    Aucun message trouvé pour "{{ searchQuery }}"
+                  </div>
+                  <div *ngFor="let message of (searchResults || selectedConversation.messages)" 
                        class="flex"
                        [class.justify-end]="message.senderId === currentUser?.id">
                     <div class="max-w-[70%] rounded-lg p-3"
                          [style.background-color]="getMessageBackgroundColor(message)"
                          [class.text-white]="message.senderId === currentUser?.id"
                          [class.text-black]="message.senderId !== currentUser?.id">
+                      <div class="text-sm text-gray-500 mb-1" *ngIf="searchResults">
+                        {{ message.timestamp | date:'short' }}
+                      </div>
                       {{ message.content }}
                     </div>
                   </div>
@@ -136,12 +164,16 @@ import {
   export class ChatComponent implements OnInit, OnDestroy {
     @ViewChild('colorModalRef') colorModal!: UserColorModalComponent;
     @ViewChild('inputElement') inputElement!: ElementRef;
-    private socket: Socket;
+    private socket: SocketIOClient;
     currentUser: any;
     conversations: Conversation[] = [];
     selectedConversation: Conversation | null = null;
     newMessage: string = '';
     connectedUsers: any[] = [];
+    searchQuery: string = '';
+    searchResults: Message[] | null = null;
+    private searchTimeout: any;
+    private readonly SEARCH_DEBOUNCE_TIME = 500;
   
     constructor(
       private authService: AuthService,
@@ -156,8 +188,8 @@ import {
       });
   
       this.socket.on('connect', () => console.log('Connecté au serveur WebSocket'));
-      this.socket.on('connect_error', err => console.error('Erreur WS:', err));
-      this.socket.on('error', err => console.error('Erreur WebSocket:', err));
+      this.socket.on('connect_error', (err: Error) => console.error('Erreur WS:', err));
+      this.socket.on('error', (err: Error) => console.error('Erreur WebSocket:', err));
     }
   
     ngOnInit() {
@@ -204,11 +236,11 @@ import {
         }
       });
   
-      this.socket.on('users:list', (users) => {
+      this.socket.on('users:list', (users: any[]) => {
         this.connectedUsers = users.filter((u: any) => u.id !== this.currentUser.id);
       });
   
-      this.socket.on('user:connected', (user) => {
+      this.socket.on('user:connected', (user: any) => {
         const existing = this.connectedUsers.find(u => u.id === user.id);
         if (!existing) {
           this.connectedUsers.push({ ...user, isOnline: true });
@@ -217,7 +249,7 @@ import {
         }
       });
   
-      this.socket.on('user:disconnected', (userId) => {
+      this.socket.on('user:disconnected', (userId: number) => {
         const user = this.connectedUsers.find(u => u.id === userId);
         if (user) user.isOnline = false;
       });
@@ -250,8 +282,12 @@ import {
   
     selectConversation(conv: Conversation) {
       this.selectedConversation = conv;
+      this.clearSearch();
       this.conversationService.getConversationMessages(conv.id).subscribe({
-        next: (messages) => this.selectedConversation!.messages = messages,
+        next: (messages) => {
+          conv.messages = messages;
+          this.cdRef.detectChanges();
+        },
         error: (err) => console.error('Erreur chargement messages:', err)
       });
     }
@@ -341,6 +377,45 @@ import {
         : this.selectedConversation.user1;
       
       return (otherUser as any).color || '#E5E7EB';
+    }
+  
+    onSearch() {
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
+
+      if (!this.searchQuery.trim() || !this.selectedConversation) {
+        this.clearSearch();
+        return;
+      }
+
+      this.searchTimeout = setTimeout(() => {
+        const query = this.searchQuery.trim();
+        if (!query) {
+          this.clearSearch();
+          return;
+        }
+
+        this.conversationService.searchConversationMessages(
+          this.selectedConversation!.id,
+          query
+        ).subscribe({
+          next: (results) => {
+            this.searchResults = results;
+            this.cdRef.detectChanges();
+          },
+          error: (err) => {
+            console.error('Erreur recherche:', err);
+            this.searchResults = null;
+          }
+        });
+      }, this.SEARCH_DEBOUNCE_TIME);
+    }
+  
+    clearSearch() {
+      this.searchQuery = '';
+      this.searchResults = null;
+      this.cdRef.detectChanges();
     }
   }
   

@@ -62,8 +62,8 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
         return;
       }
 
-      this.connectedUsers.set(client.id, data.userId);
-      client.join(`user:${data.userId}`);
+    this.connectedUsers.set(client.id, data.userId);
+    client.join(`user:${data.userId}`);
       this.server.emit('user:connected', data.userId);
       await this.broadcastConnectedUsers();
       console.log('Utilisateur connecté avec succès:', data.userId);
@@ -91,9 +91,9 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
   @SubscribeMessage('message:send')
   async handleMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: {
-      senderId: string,
-      receiverId: string,
+    @MessageBody() data: { 
+      senderId: string, 
+      receiverId: string, 
       content: string,
       conversationId: number
     }
@@ -143,7 +143,7 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
       // Envoyer le message à tous les clients dans la conversation
       this.server.to(`user:${data.senderId}`).emit('message:receive', fullMessage);
       this.server.to(`user:${data.receiverId}`).emit('message:receive', fullMessage);
-
+      
       // Envoyer une confirmation à l'expéditeur
       client.emit('message:sent', fullMessage); // Utiliser client.emit pour l'expéditeur spécifique
 

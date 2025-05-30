@@ -18,15 +18,15 @@ import { FormFieldComponent } from '../../components/form-field/form-field.compo
             <app-form-field
               [control]="emailControl"
               label="Email"
-              type="email"
-              placeholder="Entrez votre email"
+                type="email"
+                placeholder="Entrez votre email"
             ></app-form-field>
 
             <app-form-field
               [control]="passwordControl"
               label="Mot de passe"
-              type="password"
-              placeholder="Entrez votre mot de passe"
+                type="password"
+                placeholder="Entrez votre mot de passe"
             ></app-form-field>
           </div>
 

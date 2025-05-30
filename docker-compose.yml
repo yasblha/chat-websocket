@@ -30,9 +30,10 @@ services:
 
   angular-app:
     build:
-      context: fronttest
+      context: front
       dockerfile: Dockerfile
     container_name: angular-app
+    restart: unless-stopped
     ports:
       - "4200:4200"
     volumes:
