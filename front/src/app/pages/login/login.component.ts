@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { FormFieldComponent } from '../../components/form-field/form-field.component';
 
 @Component({
   selector: 'app-login',
@@ -14,36 +15,19 @@ import { AuthService } from '../../services/auth.service';
         </div>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
           <div class="space-y-4">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                id="email"
-                formControlName="email"
-                class="form-control mt-1"
-                placeholder="Entrez votre email"
-              >
-              <div *ngIf="loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched" class="error">
-                L'email est requis
-              </div>
-              <div *ngIf="loginForm.get('email')?.errors?.['email'] && loginForm.get('email')?.touched" class="error">
-                Format d'email invalide
-              </div>
-            </div>
+            <app-form-field
+              [control]="emailControl"
+              label="Email"
+              type="email"
+              placeholder="Entrez votre email"
+            ></app-form-field>
 
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-              <input
-                type="password"
-                id="password"
-                formControlName="password"
-                class="form-control mt-1"
-                placeholder="Entrez votre mot de passe"
-              >
-              <div *ngIf="loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched" class="error">
-                Le mot de passe est requis
-              </div>
-            </div>
+            <app-form-field
+              [control]="passwordControl"
+              label="Mot de passe"
+              type="password"
+              placeholder="Entrez votre mot de passe"
+            ></app-form-field>
           </div>
 
           <button type="submit" [disabled]="loginForm.invalid" class="btn btn-primary w-full">
@@ -61,7 +45,7 @@ import { AuthService } from '../../services/auth.service';
     </div>
   `,
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormFieldComponent]
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -75,6 +59,14 @@ export class LoginComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
+  }
+
+  get emailControl() {
+    return this.loginForm.get('email') as FormControl;
+  }
+
+  get passwordControl() {
+    return this.loginForm.get('password') as FormControl;
   }
 
   onSubmit() {

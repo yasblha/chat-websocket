@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Put, UseGuards, Request } from '@nestjs/common';
 import { UserService} from "./user.service";
 import { User} from "./user.entity";
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('users')
 @Controller('user')
@@ -32,13 +33,19 @@ export class UserController {
         return this.userService.findById(id);
     }
 
-    @Post(':id')
+    @Put(':id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Mettre à jour un utilisateur' })
     @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
-    @ApiBody({ type: User })
+    @ApiBody({ type: User, description: 'Données de l\'utilisateur à mettre à jour (inclure la couleur)' })
     @ApiResponse({ status: 200, description: 'Utilisateur mis à jour avec succès', type: User })
+    @ApiResponse({ status: 401, description: 'Non autorisé' })
     @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
-    async update(@Param('id') id: number, @Body() user: User) {
+    async update(@Param('id') id: number, @Body() user: Partial<User>, @Request() req) {
+        if (req.user.id !== id) {
+            console.log('Tentative de modification du profil d\'un autre utilisateur');
+        }
         return this.userService.update(id, user);
     }
 }

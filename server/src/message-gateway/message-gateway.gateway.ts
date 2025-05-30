@@ -79,7 +79,7 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const user = await this.userService.findById(Number(userId));
         if (user) {
           const { password, ...userWithoutPassword } = user;
-          return { ...userWithoutPassword, isOnline: true };
+          return { ...userWithoutPassword, isOnline: true, color: user.color };
         }
         return null;
       })

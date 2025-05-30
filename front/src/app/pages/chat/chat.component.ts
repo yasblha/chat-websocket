@@ -17,22 +17,31 @@ import {
   import { io, Socket } from 'socket.io-client';
   import { environment } from '../../../environments/environment';
   import { FormsModule } from '@angular/forms';
+  import { UserColorModalComponent } from '../../components/user-color-modal/user-color-modal.component';
   
   @Component({
     selector: 'app-chat',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, UserColorModalComponent],
     template: `
       <div class="min-h-screen bg-gray-100">
         <div class="container mx-auto px-4 py-8">
           <div class="flex justify-between items-center mb-8">
             <h1 class="text-2xl font-bold">Chat</h1>
-            <button 
-              (click)="logout()" 
-              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-            >
-              Déconnexion
-            </button>
+            <div>
+              <button 
+                (click)="navigateToProfile()" 
+                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors mr-2"
+              >
+                Profil
+              </button>
+              <button 
+                (click)="logout()" 
+                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              >
+                Déconnexion
+              </button>
+            </div>
           </div>
   
           <div class="grid grid-cols-12 gap-4">
@@ -40,15 +49,10 @@ import {
             <div class="col-span-3 bg-white rounded-lg shadow p-4">
               <h2 class="text-lg font-semibold mb-4">Utilisateurs connectés</h2>
               <div class="space-y-2">
-                <div *ngFor="let user of connectedUsers" 
-                     (click)="startConversation(user)"
-                     class="p-3 rounded cursor-pointer hover:bg-gray-100 flex items-center gap-2"
-                     [class.bg-green-50]="user.isOnline">
-                  <div class="w-2 h-2 rounded-full" [class.bg-green-500]="user.isOnline" [class.bg-gray-300]="!user.isOnline"></div>
-                  <div>
-                    <div class="font-medium">{{ user.name }}</div>
-                    <div class="text-sm text-gray-500">{{ user.email }}</div>
-                  </div>
+                <div *ngFor="let user of connectedUsers" class="p-2 border rounded cursor-pointer hover:bg-gray-200"
+                     (click)="startConversation(user)">
+                  <span [style.color]="user.color">███</span>
+                  <span class="ml-2" (click)="navigateToUserProfile(user.id); $event.stopPropagation()">{{ user.username }}</span>
                 </div>
               </div>
             </div>
@@ -87,9 +91,9 @@ import {
                        class="flex"
                        [class.justify-end]="message.senderId === currentUser?.id">
                     <div class="max-w-[70%] rounded-lg p-3"
-                         [class.bg-blue-500]="message.senderId === currentUser?.id"
+                         [style.background-color]="getMessageBackgroundColor(message)"
                          [class.text-white]="message.senderId === currentUser?.id"
-                         [class.bg-gray-200]="message.senderId !== currentUser?.id">
+                         [class.text-black]="message.senderId !== currentUser?.id">
                       {{ message.content }}
                     </div>
                   </div>
@@ -126,9 +130,11 @@ import {
           </div>
         </div>
       </div>
+      <app-user-color-modal #colorModalRef></app-user-color-modal>
     `
   })
   export class ChatComponent implements OnInit, OnDestroy {
+    @ViewChild('colorModalRef') colorModal!: UserColorModalComponent;
     @ViewChild('inputElement') inputElement!: ElementRef;
     private socket: Socket;
     currentUser: any;
@@ -306,8 +312,35 @@ import {
       this.router.navigate(['/login']);
     }
   
+    navigateToProfile() {
+      if (this.currentUser) {
+        this.colorModal.currentUser = this.currentUser;
+        this.colorModal.open();
+      }
+    }
+  
+    navigateToUserProfile(userId: number) {
+      this.router.navigate(['/user', userId]);
+    }
+  
     ngOnDestroy() {
       this.socket?.disconnect();
+    }
+  
+    getMessageBackgroundColor(message: Message): string {
+      if (message.senderId === this.currentUser?.id) {
+        return this.currentUser?.color || '#3B82F6';
+      }
+      
+      if (!this.selectedConversation) {
+        return '#E5E7EB';
+      }
+
+      const otherUser = this.selectedConversation.user1.id === this.currentUser?.id 
+        ? this.selectedConversation.user2 
+        : this.selectedConversation.user1;
+      
+      return (otherUser as any).color || '#E5E7EB';
     }
   }
   

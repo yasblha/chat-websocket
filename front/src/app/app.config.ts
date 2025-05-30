@@ -10,12 +10,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withFetch()),
-    provideClientHydration(),
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true
-    }
+    provideHttpClient(withInterceptors([AuthInterceptor as any])),
+    provideClientHydration()
   ]
 };

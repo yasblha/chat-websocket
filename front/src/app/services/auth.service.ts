@@ -1,8 +1,9 @@
-import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
+import type { HttpHandlerFn } from '@angular/common/http';
 
 export interface User {
   id: number;
@@ -10,6 +11,7 @@ export interface User {
   email: string;
   username: string;
   status: string;
+  color?: string;
 }
 
 export interface RegisterData {
@@ -25,21 +27,18 @@ export interface AuthResponse {
   user: User;
 }
 
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
+export function AuthInterceptor(req: HttpRequest<any>, next: HttpHandlerFn): Observable<HttpEvent<any>> {
+  const authService = inject(AuthService);
+  const token = authService.getToken();
 
-  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
-    if (token) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-    }
-    return next.handle(request);
+  if (token) {
+    req = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
+  return next(req);
 }
 
 @Injectable({
@@ -119,5 +118,18 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  updateUser(userId: number, userData: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${environment.apiUrl}/user/${userId}`, userData).pipe(
+      tap(updatedUser => {
+        if (this.currentUserSubject.value?.id === updatedUser.id) {
+          this.currentUserSubject.next(updatedUser);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        }
+      })
+    );
   }
 }

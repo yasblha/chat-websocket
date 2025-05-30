@@ -26,4 +26,8 @@ export class User {
     @ApiProperty({ example: 'active', description: 'Statut de l\'utilisateur (active/inactive)' })
     @Column()
     status: string;
+
+    @ApiProperty({ example: '#3498db', description: 'Couleur personnalisée de l\'utilisateur' })
+    @Column({ nullable: true })
+    color?: string;
 }
