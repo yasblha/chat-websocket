@@ -1,59 +1,92 @@
-# MyApp
+# Projet Chat WebSocket
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.13.
+Ce projet est une application de chat en temps réel utilisant WebSocket, construite avec un backend NestJS et un frontend Angular.
 
-## Development server
+## Table des matières
 
-To start a local development server, run:
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Lancement du projet](#lancement-du-projet)
+- [Fonctionnalités](#fonctionnalités)
 
-```bash
-ng serve
-```
+## Prérequis
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Assurez-vous d'avoir installé les éléments suivants :
 
-## Code scaffolding
+- Node.js (avec npm ou yarn) et Docker Compose.
+- Angular CLI (pour le frontend si vous le lancez séparément de Docker Compose).
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Installation
 
-```bash
-ng generate component component-name
-```
+1. Clonez le dépôt :
+   ```bash
+   git clone <URL_DU_DEPOT>
+   cd chat-websocket
+   ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+2. **Backend (server)** :
+   Naviguez vers le répertoire du backend :
+   ```bash
+   cd server
+   ```
+   Installez les dépendances :
+   ```bash
+   npm install # ou yarn install
+   ```
 
-```bash
-ng generate --help
-```
+3. **Frontend (front)** :
+   Naviguez vers le répertoire du frontend :
+   ```bash
+   cd ../front
+   ```
+   Installez les dépendances :
+   ```bash
+   npm install # ou yarn install
+   ```
 
-## Building
+## Configuration de la base de données avec Docker Compose
 
-To build the project run:
+Le projet est configuré pour utiliser Docker Compose pour la base de données PostgreSQL. La synchronisation de la base de données est gérée automatiquement au lancement du backend grâce à `synchronize: true` dans la configuration TypeORM.
 
-```bash
-ng build
-```
+1. Naviguez vers le répertoire `server`.
+2. Lancez le service de base de données défini dans votre `docker-compose.yml` (doit contenir un service 'postgres') :
+   ```bash
+   docker-compose up -d postgres
+   ```
+   Assurez-vous que le fichier `server/.env` (ou la configuration NestJS) pointe vers ce service (ex: `DATABASE_URL=postgresql://user:password@localhost:5432/mydatabase` si vous mappez le port 5432, ou le nom du service docker si les conteneurs communiquent entre eux).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Lancement du projet
 
-## Running unit tests
+Vous pouvez lancer le projet de deux manières :
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+1. **Avec Docker Compose (si un fichier complet existe)** :
+   Si un fichier `docker-compose.yml` à la racine du projet configure et lance le backend et le frontend :
+   ```bash
+   docker-compose up --build
+   ```
 
-```bash
-ng test
-```
+2. **Manuellement (Backend et Frontend séparés)** :
 
-## Running end-to-end tests
+   a. **Lancer le backend** :
+      Dans le répertoire `server` :
+      ```bash
+      npm run start:dev # ou yarn start:dev
+      ```
+      Le backend devrait démarrer sur `http://localhost:3000` (ou le port configuré) et se connecter à la base de données Docker.
 
-For end-to-end (e2e) testing, run:
+   b. **Lancer le frontend** :
+      Dans le répertoire `front` :
+      ```bash
+      ng serve
+      ```
+      Le frontend devrait démarrer sur `http://localhost:4200` (ou le port configuré) et s'ouvrir dans votre navigateur.
 
-```bash
-ng e2e
-```
+## Fonctionnalités
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+- **Authentification** : Inscription et connexion des utilisateurs.
+- **Chat en temps réel** : Envoyer et recevoir des messages instantanément via WebSocket.
+- **Liste des utilisateurs connectés** : Voir quels utilisateurs sont actuellement en ligne.
+- **Création de conversations** : Démarrer une conversation avec un autre utilisateur.
+- **Recherche de messages** : Rechercher des messages spécifiques dans une conversation.
 
-## Additional Resources
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
