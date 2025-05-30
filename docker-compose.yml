@@ -30,7 +30,7 @@ services:
 
   angular-app:
     build:
-      context: ./front
+      context: fronttest
       dockerfile: Dockerfile
     container_name: angular-app
     ports:

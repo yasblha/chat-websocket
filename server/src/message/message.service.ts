@@ -60,4 +60,18 @@ export class MessageService {
     async markAsRead(messageId: number): Promise<void> {
         await this.messageRepository.update(messageId, { isRead: true });
     }
+
+    async findMessagesByConversationId(
+        conversationId: number,
+        page: number = 1,
+        limit: number = 50 // Nombre de messages par page
+    ): Promise<Message[]> {
+        const skip = (page - 1) * limit;
+        return this.messageRepository.find({
+            where: { conversationId },
+            order: { timestamp: 'ASC' }, // Trier par date pour la pagination
+            skip: skip,
+            take: limit,
+        });
+    }
 }
